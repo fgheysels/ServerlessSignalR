@@ -1,0 +1,186 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "SignalR_Name": {
+            "type": "string",
+            "defaultValue": "sls-signalr"
+        },
+        "StorageAccount_Name": {
+            "type": "string",
+            "defaultValue": "slsstorage"
+        },
+        "FunctionApp_Name": {
+            "type": "string",
+            "defaultValue": "sls-function"
+        },
+        "ConsumptionPlan_Name": {
+            "type": "string",
+            "defaultValue": "sls-consumptionplan"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.SignalRService/SignalR",
+            "apiVersion": "2020-05-01",
+            "name": "[parameters('SignalR_Name')]",
+            "location": "West Europe",
+            "sku": {
+                "name": "Free_F1",
+                "tier": "Free",
+                "capacity": 1
+            },
+            "kind": "SignalR",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "tags": {},
+            "properties": {
+                "tls": {
+                    "clientCertEnabled": false
+                },
+                "features": [
+                    {
+                        "flag": "ServiceMode",
+                        "value": "Serverless",
+                        "properties": {}
+                    },
+                    {
+                        "flag": "EnableConnectivityLogs",
+                        "value": "True",
+                        "properties": {}
+                    },
+                    {
+                        "flag": "EnableMessagingLogs",
+                        "value": "False",
+                        "properties": {}
+                    }
+                ],
+                "cors": {
+                    "allowedOrigins": [
+                        "*"
+                    ]
+                },
+                "upstream": {
+                    "templates": []
+                },
+                "networkACLs": {
+                    "defaultAction": "Deny",
+                    "publicNetwork": {
+                        "allow": [
+                            "ServerConnection",
+                            "ClientConnection",
+                            "RESTAPI"
+                        ]
+                    },
+                    "privateEndpoints": []
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2020-06-01",
+            "name": "[parameters('FunctionApp_Name')]",
+            "location": "West Europe",
+            "kind": "functionapp,linux",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('ConsumptionPlan_Name'))]",
+                "siteConfig": {
+                    "appSettings": [
+                        {
+                            "name": "AzureWebJobsStorage",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('StorageAccount_Name'), ';EndpointSuffix=', environment().suffixes.storage, ';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('StorageAccount_Name')), '2019-06-01').keys[0].value)]"
+                        },
+                        {
+                            "name": "FUNCTIONS_EXTENSION_VERSION",
+                            "value": "~3"
+                        },
+                        {
+                            "name": "WEBSITE_RUN_FROM_PACKAGE",
+                            "value": 1
+                        },
+                        {
+                            "name": "FUNCTION_APP_EDIT_MODE",
+                            "value": "readwrite"
+                        },
+                        {
+                            "name": "WEBSITE_NODE_DEFAULT_VERSION",
+                            "value": "~10"
+                        },
+                        {
+                            "name": "FUNCTIONS_WORKER_RUNTIME",
+                            "value": "dotnet"
+                        },
+                        {
+                            "name": "TelemetrySignalR_ConnectionString",
+                            "value": "[listkeys(resourceId('Microsoft.SignalRService/SignalR', parameters('SignalR_Name')), '2020-05-01').primaryConnectionString]"
+                        }
+                    ]
+                }
+            },
+            "tags": {},
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('StorageAccount_Name'))]",
+                "[resourceId('Microsoft.Web/serverfarms', parameters('ConsumptionPlan_Name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2020-06-01",
+            "name": "[parameters('ConsumptionPlan_Name')]",
+            "location": "West Europe",
+            "sku": {
+                "name": "Y1",
+                "tier": "Dynamic"
+            },
+            "properties": {
+                "name": "[parameters('ConsumptionPlan_Name')]",
+                "computeMode": "Dynamic"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2019-06-01",
+            "name": "[parameters('StorageAccount_Name')]",
+            "location": "West Europe",
+            "sku": {
+                "name": "Standard_RAGRS",
+                "tier": "Standard"
+            },
+            "kind": "StorageV2",
+            "properties": {
+                "minimumTlsVersion": "TLS1_2",
+                "allowBlobPublicAccess": true,
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": [],
+                    "ipRules": [],
+                    "defaultAction": "Allow"
+                },
+                "supportsHttpsTrafficOnly": true,
+                "encryption": {
+                    "services": {
+                        "file": {
+                            "keyType": "Account",
+                            "enabled": true
+                        },
+                        "blob": {
+                            "keyType": "Account",
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                },
+                "accessTier": "Hot"
+            },
+            "tags": {
+                "displayName": "Storage account for ServerlessSignalR FunctionApp"
+            }
+        }
+    ],
+    "outputs": {}
+}
