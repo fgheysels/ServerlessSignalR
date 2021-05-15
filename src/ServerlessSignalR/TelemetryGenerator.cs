@@ -1,13 +1,10 @@
-using System;
-using System.IO;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+using System;
+using System.Threading.Tasks;
 
 namespace ServerlessSignalR
 {
@@ -26,7 +23,7 @@ namespace ServerlessSignalR
             [SignalRTrigger("telemetry",
                             "messages",
                             "SubscribeToDevice",
-                            parameterNames: new []{ "device"}
+                            parameterNames: new []{ "device" }
                             // Note that the ConnectionStringSetting propertyname is commented out.
                             // This is done because the SignalRTrigger doesn't seem to work
                             // when specifying a custom ConnectionStringSetting.
@@ -34,7 +31,7 @@ namespace ServerlessSignalR
                             // which is AzureSignalRConnectionString.
                             // (That's also the reason why we duplicate both settings in the Azure FunctionApp's settings.
                             // GH Issue: https://github.com/Azure/azure-functions-signalrservice-extension/issues/207
-                           // ,ConnectionStringSetting = "TelemetrySignalR_ConnectionString"
+                            , ConnectionStringSetting = "TelemetrySignalR_ConnectionString"
             )] InvocationContext invocationContext,
             string device,
             ILogger logger)
