@@ -37,7 +37,7 @@ namespace ServerlessSignalR
             ILogger logger)
         {
             logger.LogInformation("User = " + invocationContext.UserId);
-
+            
             var groupManager = await invocationContext.GetGroupsAsync();
 
             await groupManager.AddToGroupAsync(invocationContext.ConnectionId, device);
@@ -49,12 +49,14 @@ namespace ServerlessSignalR
 
         [FunctionName(nameof(TelemetryGenerator))]
         public static async Task Run(
-            [TimerTrigger("*/5 * * * * *")] TimerInfo timer,
+            [TimerTrigger("*/2 * * * * *")] TimerInfo timer,
             [SignalR(ConnectionStringSetting = "TelemetrySignalR_ConnectionString", HubName = "telemetry")] IAsyncCollector<SignalRMessage> outputMessages,
             ILogger log)
         {
 
             var temperature = tempGenerator.Next(-15, 40);
+
+            log.LogInformation($"Generated temperature: {temperature}");
 
             var message = $"\"temperature\": {temperature}";
 
@@ -64,7 +66,6 @@ namespace ServerlessSignalR
                 Arguments = new object[] { message },
                 GroupName = (temperature % 2 == 0) ? "eventempgenerator" : "oddtempgenerator"
             });
-
         }
     }
 }
