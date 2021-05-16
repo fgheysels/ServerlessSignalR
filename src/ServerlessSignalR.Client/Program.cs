@@ -9,7 +9,9 @@ namespace ServerlessSignalR.Client
     {
         static async Task Main(string[] args)
         {
-            string url = "https://sls-function.azurewebsites.net/api";
+            // TODO: initialize url with the address where the Azure Function is hosted; do not forget the api path.
+            //       For instance: https://myfunction.azurewebsites.net/api"
+            string url = "";
 
             var connection = new HubConnectionBuilder()
                              .WithUrl(url)
