@@ -3,7 +3,7 @@
 ## Introduction
 
 This is a sample project to demonstrate that there's an issue with the `SignalRTrigger` trigger in Azure Functions when using Azure SignalR in serverless mode.
-As explained in [this issue](Azure/azure-functions-signalrservice-extension#207), the `SignalRTrigger` does not seem to work when using a custom settingname for the `ConnectionStringSetting` property.
+As explained in [this issue](https://github.com/Azure/azure-functions-signalrservice-extension/issues/207), the `SignalRTrigger` does not seem to work when using a custom settingname for the `ConnectionStringSetting` property.
 
 This behavior is reproducable using `Microsoft.Azure.WebJobs.Extensions.SignalRService 1.4.0`.
 
